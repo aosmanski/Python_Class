@@ -40,9 +40,9 @@ def get_args():
     #Argument of RepeatMasker run parameter
     parser.add_argument('-lib', type=str, help='RepeatMasker run parameter custom library "-lib [filename]" option', required=False)
     #Argument of RepeatMasker run parameter
-    parser.add_argument('-xsmall', help='Select a RepeatMasker masking option as lowercase bases [-xsmall], default is to mask as Ns', action='store_true')
+    parser.add_argument('-xsmall', action='store_true', help='Select a RepeatMasker masking option as lowercase bases [-xsmall], default is to mask as Ns')
     #Argument of RepeatMasker run parameter
-    parser.add_argument('-nolow', help='RepeatMasker parameter flag "-nolow" option; does not mask low complexity DNA or simple repeats', action='store_true')
+    parser.add_argument('-nolow', action='store_true', help='RepeatMasker parameter flag "-nolow" option; does not mask low complexity DNA or simple repeats')
     #Argument of RepeatMasker run parameter
     parser.add_argument('-s', '--speed', type=str, help='RepeatMasker run parameter "-q" or "-s" option; q=quick search; 5-10% less sensitive, 3-4 times faster than default; s=slow search; 0-5% more sensitive, 2.5 times slower than default', choices=['q', 's'], required=False)
     
@@ -69,6 +69,14 @@ print("The genome FASTA is located in '{}'.\n".format(GENOME_DIR))
 print("The output directory is '{}'.\n".format(OUTDIR))
 print("The job queue is {}.\n".format(QUEUE))
 
+#check this line
+if not SPECIES:
+	if not LIBRARY:
+		sys.exit("Must supply value for option 'species' or 'lib'!")
+#if not SPECIES or LIBRARY:
+#    sys.exit("Must supply value for option 'species' or 'lib'!")
+
+
 if not SPECIES or LIBRARY:
     sys.exit("Must supply value for option 'species' or 'lib'!")
 if SPECIES and LIBRARY:
@@ -94,12 +102,13 @@ if not os.path.isdir(GENOME_DIR):
 
 GENOME_FASTA = os.path.join(GENOME_DIR, GENOME)
 
-try:
-    if not os.path.getsize(GENOME_FASTA) > 0:
-        sys.exit("The genome file, '{}', is empty.".format(GENOME_FASTA))
-except OSError as e:
-    sys.exit("The genome file '{}' does not exist or is inaccessible.".format(GENOME_FASTA))
-    
+if LIBRARY:
+	try:
+	    if not os.path.getsize(LIBRARY) > 0:
+		sys.exit("The library file, '{}', is empty.".format(LIBRARY))
+	except OSError as e:
+	    sys.exit("The library file '{}' does not exist or is inaccessible.".format(LIBRARY))
+  
 try:
     if not os.path.getsize(LIBRARY) > 0:
         sys.exit("The library file, '{}', is empty.".format(LIBRARY))
@@ -266,10 +275,10 @@ def generate_rmsubs(BATCH_COUNT, QUEUE, PREFIX, LIBRARY, SPECIES, XSMALL, NOLOW,
         SGEBATCH_PATH = os.path.join(PARTITION_DIR, PATH)
         SGEBATCH = os.path.join(SGEBATCH_PATH, SGEBATCH_NAME)
         '''
-        if QUEUE = 'hrothgar':
+        if QUEUE == 'hrothgar':
             PROJECT = 'communitycluster'
             KUE = 'Chewie'
-        elif QUEUE = 'quanah':
+        elif QUEUE == 'quanah':
             PROJECT = 'quanah'
             KUE = 'omni'
         else:
@@ -426,65 +435,6 @@ OUTPUT.close()
 # TROUBLESHOOTING THE SGE SCRIPT
 python all_together.py -i aVan.fa -sp mammals -b 50 -dir /lustre/scratch/aosmansk/python/lft -od /lustre/scratch/aosmansk/python/lft -q quanah -s s -lib TElib.fas
 
-### ERROR 1 ###
-  File "all_together.py", line 269
-    if QUEUE = 'hrothgar':
-             ^
-SyntaxError: invalid syntax
-
-# FIX: Commented out lines 269-276 in order to bypass this issue and continue with troubleshooting.
-  # Need to address this issue further.
-
-
-### ERROR 2 ###
-  File "all_together.py", line 278
-    with open(SGEBATCH) as BATCH_FILE:
-    ^
-IndentationError: unexpected indent
-
-# FIX: removed an indent for every line between 278-292
-  # Error resolved
-
-
-### ERROR 3 ###
-Traceback (most recent call last):
-  File "all_together.py", line 63, in <module>
-    GENOME, SPECIES, BATCH_COUNT, GENOME_DIR, OUTDIR, QUEUE, LIBRARY, XSMALL, NOLOW, SPEED = get_args()
-  File "all_together.py", line 43, in get_args
-    parser.add_argument('-xsmall', type=str, help='Select a RepeatMasker masking option as lowercase bases [-xsmall], default is to mask as Ns', action='store_true')
-  File "/home/aosmansk/conda/lib/python3.7/argparse.py", line 1353, in add_argument
-    action = action_class(**kwargs)
-TypeError: __init__() got an unexpected keyword argument 'type'
-
-# FIX: default argparse assumes the argument is a string. I'll remove the whole "type=str" from line 43 and see if that works.
-  # Error resolved. 
-
-
-### ERROR 4 ###
-Traceback (most recent call last):
-  File "all_together.py", line 63, in <module>
-    GENOME, SPECIES, BATCH_COUNT, GENOME_DIR, OUTDIR, QUEUE, LIBRARY, XSMALL, NOLOW, SPEED = get_args()
-  File "all_together.py", line 45, in get_args
-    parser.add_argument('-nolow', type=str, help='RepeatMasker parameter flag "-nolow" option; does not mask low complexity DNA or simple repeats', action='store_true')
-  File "/home/aosmansk/conda/lib/python3.7/argparse.py", line 1353, in add_argument
-    action = action_class(**kwargs)
-TypeError: __init__() got an unexpected keyword argument 'type'
-
-# FIX: default argparse assumes the argument is a string. I'll remove the whole "type=str" from line 45 and see if that works.
-  # Error resolved.
-
-
-### ERROR 5 ###
-Traceback (most recent call last):
-  File "all_together.py", line 63, in <module>
-    GENOME, SPECIES, BATCH_COUNT, GENOME_DIR, OUTDIR, QUEUE, LIBRARY, XSMALL, NOLOW, SPEED = get_args()
-  File "all_together.py", line 59, in get_args
-    SPEED = args.speed
-AttributeError: 'Namespace' object has no attribute 'speed'
-
-# FIX: Changed "-speed" in line 47 to "--speed"
-  # Error resolved
-
 
 ### ERROR 6 ###
 Traceback (most recent call last):
@@ -506,7 +456,7 @@ python all_together.py -i aVan.fa -b 50 -dir /lustre/scratch/aosmansk/python/lft
 
 # If I use -sp the script breaks as in ERROR 6, and if I use -lib the script breaks because it think's I'm not providing a -sp or -lib option.
   # Issue needs to be addressed.
-
+	##Probably a True/False value issue for the if SPECIES or LIBRARY: line
 
 
 
